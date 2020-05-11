@@ -1,5 +1,7 @@
 import * as functions from 'firebase-functions';
+import * as cors from "cors";
 
+const corsHandler = cors({ origin: true });
 // The Firebase Admin SDK to access the Firebase Realtime Database.
 const admin = require('firebase-admin');
 admin.initializeApp();
@@ -14,13 +16,16 @@ exports.addMessage = functions.https.onRequest(async (req, res) => {
 });
 
 exports.getMessages = functions.https.onRequest(async (req, res) => {
-    const snapshot = await admin.database().ref("/messages");
-    res.send(String(snapshot))
-});
+  const items: any[] = [];
+  await admin.database().ref("/messages").once('value').then(function(snapshot) {
+    return snapshot.forEach(function (childSnapshot) {
+      items.push(
+          childSnapshot.val()
+      );
+    });
+  });
 
-// // Start writing Firebase Functions
-// // https://firebase.google.com/docs/functions/typescript
-//
-// export const helloWorld = functions.https.onRequest((request, response) => {
-//  response.send("Hello from Firebase!");
-// });
+  corsHandler(req, res, () => {
+    res.status(200).send(items);
+  });
+});
