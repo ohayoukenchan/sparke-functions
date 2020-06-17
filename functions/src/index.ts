@@ -10,12 +10,32 @@ admin.initializeApp();
 // データベースの参照を作成
 var fireStore = admin.firestore()
 
+exports.getBooks = functions.https.onRequest((request, response) => {
+
+  const booksRef = fireStore.collection('books')
+  const items: any[] = [];
+  corsHandler(request, response, () => {
+    booksRef.get()
+      .then(snapshot => {
+        snapshot.forEach(childSnapshot => {
+          items.push(
+            childSnapshot.data()
+          );
+       });
+        response.status(200).send(items);
+     })
+      .catch(err => {
+        console.log('Error getting documents', err);
+      });
+  })
+})
+
 exports.addBooks = functions.https.onRequest((request, response) => {
   // 動作確認のため適当なデータをデータベースに保存
   const booksRef = fireStore.collection('books');
   booksRef.doc('9784334751081').set({
-    isbn: '9784334751081', 
-    price: '770', 
+    isbn: '9784334751081',
+    price: '770',
     publisher: '光文社',
     title: '永遠平和のために/啓蒙とは何か 他3編 (光文社古典新訳文庫) (日本語) 文庫'
   })
@@ -91,3 +111,19 @@ exports.getMessages = functions.https.onRequest(async (req, res) => {
     res.status(200).send(items);
   });
 });
+
+exports.getUser = functions.https.onRequest(async (req, res) => {
+  const docRef = fireStore.collection("users").doc("IX4QLuEBcdtK0ABo60KE");
+
+  docRef.get().then(function(doc) {
+    if (doc.exists) {
+        console.log("Document data:", doc.data());
+        return doc.data()
+    } else {
+        // doc.data() will be undefined in this case
+        console.log("No such document!");
+    }
+  }).catch(function(error) {
+    console.log("Error getting document:", error);
+  });
+})
