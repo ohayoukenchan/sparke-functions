@@ -113,17 +113,20 @@ exports.getMessages = functions.https.onRequest(async (req, res) => {
 });
 
 exports.getUser = functions.https.onRequest(async (req, res) => {
-  const docRef = fireStore.collection("users").doc("IX4QLuEBcdtK0ABo60KE");
+  var docRef = fireStore.collection("users").doc("IX4QLuEBcdtK0ABo60KE");
 
-  docRef.get().then(function(doc) {
-    if (doc.exists) {
-        console.log("Document data:", doc.data());
-        return doc.data()
-    } else {
+  corsHandler(req, res, () => {
+    docRef.get().then(function(doc) {
+      if (doc.exists) {
+        //console.log("Document data:", doc.data());
+        //return doc.data()
+          res.send(doc.data())
+      } else {
         // doc.data() will be undefined in this case
-        console.log("No such document!");
-    }
-  }).catch(function(error) {
-    console.log("Error getting document:", error);
-  });
+          res.send("No such document!");
+      }
+    }).catch(function(error) {
+      res.send(error);
+    });
+  })
 })
