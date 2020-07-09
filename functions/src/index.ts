@@ -107,6 +107,21 @@ exports.getMessages = functions.https.onRequest(async (req, res) => {
     });
   });
 
+  exports.getPhrases = functions.https.onRequest(async (req, res) => {
+    const items: any[] = [];
+    await admin.database().ref("/phrases").once('value').then(function(snapshot) {
+      return snapshot.forEach(function (childSnapshot) {
+        items.push(
+            childSnapshot.val()
+        );
+      });
+    });
+
+    corsHandler(req, res, () => {
+      res.status(200).send(items);
+    });
+  })
+
   corsHandler(req, res, () => {
     res.status(200).send(items);
   });
