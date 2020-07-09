@@ -30,6 +30,29 @@ exports.getBooks = functions.https.onRequest((request, response) => {
   })
 })
 
+
+exports.getPhrases = functions.https.onRequest(async (request, response) => {
+  const phrasesSnapshot = await fireStore.collection('phrases').get();
+  const items: any[] = [];
+
+  phrasesSnapshot.forEach(doc => {
+    items.push(doc.data());
+  });
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const userQuerySnapshot = await item.userID.get();
+    item.userID = userQuerySnapshot.data();
+    item.createdAt = item.createdAt.toDate();
+    item.updatedAt = item.updatedAt.toDate();
+  }
+
+  corsHandler(request, response, () => {
+    response.status(200).send(items);
+  })
+
+})
+
 exports.addBooks = functions.https.onRequest((request, response) => {
   // 動作確認のため適当なデータをデータベースに保存
   const booksRef = fireStore.collection('books');
@@ -106,26 +129,10 @@ exports.getMessages = functions.https.onRequest(async (req, res) => {
       );
     });
   });
-
-  exports.getPhrases = functions.https.onRequest(async (req, res) => {
-    const items: any[] = [];
-    await admin.database().ref("/phrases").once('value').then(function(snapshot) {
-      return snapshot.forEach(function (childSnapshot) {
-        items.push(
-            childSnapshot.val()
-        );
-      });
-    });
-
-    corsHandler(req, res, () => {
-      res.status(200).send(items);
-    });
-  })
-
   corsHandler(req, res, () => {
     res.status(200).send(items);
   });
-});
+})
 
 exports.getUser = functions.https.onRequest(async (req, res) => {
   var docRef = fireStore.collection("users").doc("IX4QLuEBcdtK0ABo60KE");
